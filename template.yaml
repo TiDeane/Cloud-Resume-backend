@@ -15,8 +15,16 @@ Transform:
 # Resources declares the AWS resources that you want to include in the stack
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
 Resources:
-  # Each Lambda function is defined by properties:
-  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+
+  ServerlessHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+          - https://d3f2t5moya606c.cloudfront.net
+        AllowMethods:
+          - GET
+          - POST
 
   # This is a Lambda function config associated with the source code: get-top-countries.js
   getTopCountriesFunction:
@@ -43,6 +51,7 @@ Resources:
           Properties:
             Path: /top
             Method: GET
+            ApiId: !Ref ServerlessHttpApi
 
   # This is a Lambda function config associated with the source code: inc-visitor-country.js
   incVisitorCountryFunction:
@@ -69,9 +78,7 @@ Resources:
           Properties:
             Path: /track
             Method: POST
-            CorsConfiguration:
-              AllowOrigins:
-                - https://d3f2t5moya606c.cloudfront.net
+            ApiId: !Ref ServerlessHttpApi
 
   # DynamoDB table to store item: {countryCode: <ID>, countryName: <NAME>, count: <number>}
   CloudResumeVisitorCountry:
