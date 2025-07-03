@@ -1,0 +1,91 @@
+# This is the SAM template that represents the architecture of your serverless application
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
+
+# The AWSTemplateFormatVersion identifies the capabilities of the template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Cloud-Resume-backend
+
+# Transform section specifies one or more macros that AWS CloudFormation uses to process your template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
+Transform:
+- AWS::Serverless-2016-10-31
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Resources:
+  # Each Lambda function is defined by properties:
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+
+  # This is a Lambda function config associated with the source code: get-top-countries.js
+  getTopCountriesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/get-top-countries.getTopCountriesHandler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: HTTP GET method to get the top 3 countries by visits to the website
+      Policies:
+        # Give Create/Read/Update/Delete Permissions to the CloudResumeVisitorCountry table
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CloudResumeVisitorCountry
+      Environment:
+        Variables:
+          # Make table name accessible as environment variable from function code during execution
+          VISITOR_COUNTRY_TABLE: !Ref CloudResumeVisitorCountry
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /top
+            Method: GET
+
+  # This is a Lambda function config associated with the source code: inc-visitor-country.js
+  incVisitorCountryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/inc-visitor-country.incCountryHandler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: HTTP post method to increase the visitor's country's count on DynamoDB
+      Policies:
+        # Give Create/Read/Update/Delete Permissions to the VISITOR_COUNTRY_TABLE
+        - DynamoDBCrudPolicy:
+            TableName: !Ref CloudResumeVisitorCountry
+      Environment:
+        Variables:
+          # Make table name accessible as environment variable from function code during execution
+          VISITOR_COUNTRY_TABLE: !Ref CloudResumeVisitorCountry
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /track
+            Method: POST
+            CorsConfiguration:
+              AllowOrigins:
+                - https://d3f2t5moya606c.cloudfront.net
+
+  # DynamoDB table to store item: {countryCode: <ID>, countryName: <NAME>, count: <number>}
+  CloudResumeVisitorCountry:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: CloudResumeVisitorCountry
+      PrimaryKey:
+        Name: countryCode
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+Outputs:
+  HttpApiUrl:
+    Description: "HTTP API Gateway endpoint URL for default stage"
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
