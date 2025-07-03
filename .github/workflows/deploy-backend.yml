@@ -34,7 +34,7 @@ jobs:
       - name: Install AWS SAM CLI
         uses: aws-actions/setup-sam@v2
         with:
-          version: latest
+          version: '1.142.1'
 
       - name: Build SAM app
         run: sam build
