@@ -23,6 +23,7 @@ export const getTopCountriesHandler = async (event) => {
     const data = await ddbDocClient.send(new ScanCommand(params));
 
     var topCountries = data.Items
+      .filter(item => item.countryName !== 'Unknown') // can remove when database is more full
       .sort((a, b) => (b.count || 0) - (a.count || 0))
       .slice(0, 3); // Top 3
 
