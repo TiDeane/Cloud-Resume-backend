@@ -7,7 +7,7 @@ This project contains source code and supporting files for a serverless backend 
 - `__tests__` - Unit tests for the application code. 
 - `template.yaml` - A template that defines the application's AWS resources.
 
-The application uses several AWS resources, including Lambda functions, an API Gateway API, and a Amazon DynamoDB table. These resources are defined in the `template.yaml` file in this project.
+The application uses several AWS resources, including Lambda functions, an API Gateway and a DynamoDB table. SAM leverages CloudFormation for automatic deployment of AWS services. These resources are defined in the `template.yaml` file in this project.
 
 The website's frontend source code is [here](https://github.com/TiDeane/Cloud-Resume-frontend).
 
@@ -54,7 +54,7 @@ Run functions locally and invoke them with the `sam local invoke` command.
 
 ```bash
 $ sam local invoke getTopCountriesFunction --event events/event-get-top-countries.json
-$ sam local invoke incVisitorCountryFunction --event events/event-inc-visitor-country.json
+$ sam local invoke incVisitorCountryFunction --event events/event-inc-visitor-country-valid.json
 ```
 
 The AWS SAM CLI can also emulate your application's API. Use the `sam local start-api` command to run the API locally on port 3000.

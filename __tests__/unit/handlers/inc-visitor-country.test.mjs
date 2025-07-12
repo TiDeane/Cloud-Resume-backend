@@ -12,7 +12,7 @@ describe('Test incCountryHandler', function () {
         ddbMock.reset();
       });
  
-    // This test invokes incCountryHandler() and compares the result  
+    // invokes incCountryHandler() with valid headers
     it('increments the count for the corresponding country', async () => { 
         const returnedItem = { message: 'Updated country: PT' }; 
   
@@ -32,7 +32,6 @@ describe('Test incCountryHandler', function () {
             }
         }; 
      
-        // Invoke incCountryHandler() 
         const result = await incCountryHandler(event); 
         
         const expectedResult = { 
@@ -40,8 +39,65 @@ describe('Test incCountryHandler', function () {
             body: JSON.stringify(returnedItem) 
         }; 
  
-        // Compare the result with the expected result 
         expect(result).toEqual(expectedResult); 
-    }); 
+    });
+
+    // invokes incCountryHandler() with missing country-code header
+    it('doesn\'t update table when country-code header is missing', async () => { 
+        const returnedItem = { error: 'Failed to update count, unknown country code' }; 
+  
+        ddbMock.on(UpdateCommand).resolves({
+            returnedItem
+        }); 
+ 
+        const event = { 
+            requestContext: {
+                http: {
+                    method: 'POST'
+                }
+            },
+            headers: {
+                'cloudfront-viewer-country-name': 'Portugal'
+            }
+        }; 
+     
+        const result = await incCountryHandler(event); 
+        
+        const expectedResult = { 
+            statusCode: 500, 
+            body: JSON.stringify(returnedItem) 
+        }; 
+ 
+        expect(result).toEqual(expectedResult); 
+    });
+
+    // invokes incCountryHandler() with missing country-name header
+    it('updates count but doesn\'t set countryName when country-name header is missing', async () => { 
+        const returnedItem = { message: 'Updated country: PT' }; 
+  
+        ddbMock.on(UpdateCommand).resolves({
+            returnedItem
+        }); 
+ 
+        const event = { 
+            requestContext: {
+                http: {
+                    method: 'POST'
+                }
+            },
+            headers: {
+                'cloudfront-viewer-country': 'PT'
+            }
+        }; 
+     
+        const result = await incCountryHandler(event); 
+        
+        const expectedResult = { 
+            statusCode: 200, 
+            body: JSON.stringify(returnedItem) 
+        }; 
+ 
+        expect(result).toEqual(expectedResult); 
+    });
 }); 
  

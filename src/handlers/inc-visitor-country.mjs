@@ -26,17 +26,32 @@ export const incCountryHandler = async (event) => {
   var params = {
     TableName: tableName,
     Key: { countryCode },
-    UpdateExpression: 'SET #c = if_not_exists(#c, :zero) + :inc, #n = :countryName',
-    ExpressionAttributeNames: {
-      '#c': 'count',
-      '#n': 'countryName'
-    },
+    ExpressionAttributeNames: { '#c': 'count' },
     ExpressionAttributeValues: {
       ':zero': 0,
       ':inc': 1,
-      ':countryName': countryName
-    }
+    },
   };
+
+  if (countryCode === "Unknown") {
+    // Abort and don't update table if countryCode is unknown
+    console.log("Unknown country code - aborting operation");
+
+    const response = {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Failed to update count, unknown country code' })
+    };
+
+    return response;
+  } else if (countryName === "Unknown") {
+    // Update count but don't set countryName if it is unknown
+    params.UpdateExpression = 'SET #c = if_not_exists(#c, :zero) + :inc';
+  } else {
+    // Update both
+    params.UpdateExpression = 'SET #c = if_not_exists(#c, :zero) + :inc, #n = :countryName';
+    params.ExpressionAttributeNames['#n'] = 'countryName';
+    params.ExpressionAttributeValues[':countryName'] = countryName;
+  }
 
   try {
     const data = await ddbDocClient.send(new UpdateCommand(params));
