@@ -16,12 +16,12 @@ Transform:
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
 Resources:
 
-  ServerlessHttpApi:
+  VisitorCountryApi:
     Type: AWS::Serverless::HttpApi
     Properties:
       CorsConfiguration:
         AllowOrigins:
-          - https://d3f2t5moya606c.cloudfront.net
+          - https://cv.tiagodeane.com
         AllowMethods:
           - GET
           - POST
@@ -35,7 +35,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 128
-      Timeout: 100
+      Timeout: 10
       Description: HTTP GET method to get the top 3 countries by visits to the website
       Policies:
         # Give Create/Read/Update/Delete Permissions to the CloudResumeVisitorCountry table
@@ -51,7 +51,7 @@ Resources:
           Properties:
             Path: /top
             Method: GET
-            ApiId: !Ref ServerlessHttpApi
+            ApiId: !Ref VisitorCountryApi
 
   # This is a Lambda function config associated with the source code: inc-visitor-country.js
   incVisitorCountryFunction:
@@ -62,7 +62,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 128
-      Timeout: 100
+      Timeout: 10
       Description: HTTP post method to increase the visitor's country's count on DynamoDB
       Policies:
         # Give Create/Read/Update/Delete Permissions to the VISITOR_COUNTRY_TABLE
@@ -78,7 +78,7 @@ Resources:
           Properties:
             Path: /track
             Method: POST
-            ApiId: !Ref ServerlessHttpApi
+            ApiId: !Ref VisitorCountryApi
 
   # DynamoDB table to store item: {countryCode: <ID>, countryName: <NAME>, count: <number>}
   CloudResumeVisitorCountry:
@@ -95,4 +95,4 @@ Resources:
 Outputs:
   HttpApiUrl:
     Description: "HTTP API Gateway endpoint URL for default stage"
-    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
+    Value: !Sub "https://${VisitorCountryApi}.execute-api.${AWS::Region}.amazonaws.com"
